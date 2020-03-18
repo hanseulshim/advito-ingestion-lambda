@@ -1,0 +1,35 @@
+service: lambda-s3-trigger
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: us-east-2
+  stage: dev
+  timeout: 120
+  environment:
+    DB_HOST: ${self:custom.environment.DB_HOST}
+    DB_USER: ${self:custom.environment.DB_USER}
+    DB_PASSWORD: ${self:custom.environment.DB_PASSWORD}
+    DB_ADVITO: ${self:custom.environment.DB_ADVITO}
+    DB_HOTEL: ${self:custom.environment.DB_HOTEL}
+    ACCESS_KEY_ID: ${self:custom.environment.ACCESS_KEY_ID}
+    SECRET_ACCESS_KEY: ${self:custom.environment.SECRET_ACCESS_KEY}
+    REGION: ${self:custom.environment.REGION}
+  vpc:
+    securityGroupIds:
+      - 'sg-09b7d9888c893594d'
+    subnetIds:
+      - 'subnet-08c1aacead6928c9f'
+
+functions:
+  process-file:
+    handler: handler.processFile
+    events:
+      - s3:
+        bucket: bcd-rates-monthly
+        event: s3:ObjectCreated:*
+        rules:
+          - suffix: .xlsx
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  environment: ${file(env.yml):${self:custom.stage}, file(env.yml):default}
