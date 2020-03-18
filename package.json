@@ -5,7 +5,7 @@
 	"main": "handler.js",
 	"scripts": {
 		"deploy": "sls deploy -s dev --aws-profile advito",
-		"deploy:stage": "sls deploy -s beta --aws-profile advito"
+		"deploy:stage": "sls deploy -s stage --aws-profile advito"
 	},
 	"author": "",
 	"license": "ISC",
