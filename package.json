@@ -1,19 +1,24 @@
 {
-	"name": "lambda-s3-trigger",
+	"name": "ingestion-file-cleanup",
 	"version": "1.0.0",
 	"description": "",
 	"main": "handler.js",
 	"scripts": {
-		"deploy": "sls deploy -s dev --aws-profile advito",
-		"deploy:staging": "sls deploy -s staging --aws-profile advito"
+		"start": "nodemon ./server.js",
+		"deploy:dev": "sls deploy -s dev --aws-profile advito",
+		"deploy:staging": "sls deploy -s staging --aws-profile advito",
+		"deploy:production": "sls deploy -s production --aws-profile advito",
+		"deploy:all": "yarn deploy:dev && yarn deploy:staging && yarn deploy:production"
 	},
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"aws-sdk": "^2.641.0",
-		"csv-parse": "^4.8.8",
-		"csv-parser": "^2.3.2",
-		"knex": "^0.20.11",
-		"pg": "^7.18.2"
+		"aws-sdk": "^2.659.0",
+		"knex": "^0.21.0",
+		"pg": "^8.0.2"
+	},
+	"devDependencies": {
+		"nodemon": "^2.0.3",
+		"yenv": "^2.1.1"
 	}
 }
