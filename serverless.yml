@@ -1,4 +1,4 @@
-service: ingestion-file-cleanup
+service: advito-ingestion
 
 provider:
   name: aws
@@ -23,10 +23,18 @@ provider:
       - 'subnet-08c1aacead6928c9f'
 
 functions:
-  cleanup-file:
-    handler: handler.cleanupFile
+  delete-error-files:
+    handler: ingestion.deleteErrorFiles
     events:
       - schedule: rate(1 day)
+  insert-bcd-stage-monthly-rates:
+    handler: bcd.insertBcdStageMonthlyRates
+    events:
+      - s3:
+        bucket: bcd-rates-monthly
+        event: s3:ObjectCreated:*
+        rules:
+          - suffix: .xlsx
 
 custom:
   stage: ${opt:stage, self:provider.stage}

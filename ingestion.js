@@ -17,7 +17,7 @@ const advito = require('knex')({
 	}
 })
 
-module.exports.cleanupFile = async () => {
+module.exports.deleteErrorFiles = async () => {
 	const date = new Date()
 	date.setDate(date.getDate() - 5)
 	try {
