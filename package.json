@@ -4,7 +4,7 @@
 	"description": "",
 	"main": "handler.js",
 	"scripts": {
-		"start": "nodemon ./server.js",
+		"start": "nodemon",
 		"deploy:dev": "sls deploy -s dev --aws-profile advito",
 		"deploy:staging": "sls deploy -s staging --aws-profile advito",
 		"deploy:production": "sls deploy -s production --aws-profile advito",
@@ -14,8 +14,10 @@
 	"license": "ISC",
 	"dependencies": {
 		"aws-sdk": "^2.659.0",
+		"csv-parser": "^2.3.2",
 		"knex": "^0.21.0",
-		"pg": "^8.0.2"
+		"pg": "^8.0.2",
+		"xlsx": "^0.15.6"
 	},
 	"devDependencies": {
 		"nodemon": "^2.0.3",
