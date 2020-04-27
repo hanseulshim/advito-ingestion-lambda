@@ -5,7 +5,7 @@ const yenv = require('yenv')
 const xlsx = require('xlsx')
 
 const env = yenv('./env.yml', {
-	env: 'default'
+	env: 'production'
 })
 const s3 = new aws.S3({
 	apiVersion: '2006-03-01',
@@ -51,44 +51,78 @@ module.exports.ingestHotelTemplate = async (event) => {
 			Key: columnList[0].file_name
 		}
 
-		const file = s3.getObject(params).createReadStream()
-		const buffers = []
+		const file = await s3.getObject(params).promise()
 
-		file.on('data', (data) => {
-			buffers.push(data)
-		})
+		const workbook = xlsx.read(file.Body)
+		const sheetNameList = workbook.SheetNames
+		const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetNameList[0]])
 
-		file.on('end', async () => {
-			const buffer = Buffer.concat(buffers)
-			const workbook = xlsx.read(buffer)
-			const sheetNameList = workbook.SheetNames
-			const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetNameList[0]])
-
-			const insertArray = data.map((json) => {
-				const returnObj = {
-					job_ingestion_id: jobIngestionId
+		const insertArray = data.map((json) => {
+			const returnObj = {
+				job_ingestion_id: jobIngestionId
+			}
+			Object.keys(json).forEach((key) => {
+				const column = columnList.find(
+					(c) => c.column_name.toLowerCase() === key.trim().toLowerCase()
+				)
+				if (column !== undefined) {
+					returnObj[column.stage_column_name] = String(
+						json[column.column_name]
+					).trim()
 				}
-				Object.keys(json).forEach((key) => {
-					const column = columnList.find(
-						(c) => c.column_name.toLowerCase() === key.trim().toLowerCase()
-					)
-					if (column !== undefined) {
-						returnObj[column.stage_column_name] = String(
-							json[column.column_name]
-						).trim()
-					}
-				})
-				return returnObj
 			})
-			await advito('stage_activity_hotel').insert(insertArray)
-			await advito('job_ingestion').update({
-				job_status: 'Ingested',
-				job_note: `Ingestion Date: ${new Date().toLocaleString()}`
-			})
+			return returnObj
 		})
+		await advito('stage_activity_hotel').insert(insertArray)
+		await advito('job_ingestion').update({
+			job_status: 'Ingested',
+			job_note: `Ingestion Date: ${new Date().toLocaleString()}`
+		})
+		return `Insert ${jobIngestionId} into successful`
+
+		// const file = s3.getObject(params).createReadStream()
+		// const buffers = []
+
+		// console.log('file', columnList[0].file_name)
+		// file.on('data', (data) => {
+		// 	console.log(data)
+		// 	buffers.push(data)
+		// })
+
+		// file.on('end', async () => {
+		// 	console.log('done')
+		// 	const buffer = Buffer.concat(buffers)
+		// 	const workbook = xlsx.read(buffer)
+		// 	const sheetNameList = workbook.SheetNames
+		// 	const data = xlsx.utils.sheet_to_json(workbook.Sheets[sheetNameList[0]])
+
+		// 	const insertArray = data.map((json) => {
+		// 		const returnObj = {
+		// 			job_ingestion_id: jobIngestionId
+		// 		}
+		// 		Object.keys(json).forEach((key) => {
+		// 			const column = columnList.find(
+		// 				(c) => c.column_name.toLowerCase() === key.trim().toLowerCase()
+		// 			)
+		// 			if (column !== undefined) {
+		// 				returnObj[column.stage_column_name] = String(
+		// 					json[column.column_name]
+		// 				).trim()
+		// 			}
+		// 		})
+		// 		return returnObj
+		// 	})
+		// 	console.log('Putting data into stage activity hotel')
+		// 	await advito('stage_activity_hotel').insert(insertArray)
+		// 	await advito('job_ingestion').update({
+		// 		job_status: 'Ingested',
+		// 		job_note: `Ingestion Date: ${new Date().toLocaleString()}`
+		// 	})
+		// 	console.log(process.env.DB_HOST ? process.env.DB_HOST : env.DB_HOST)
+		// })
 	} catch (e) {
 		console.log(e)
 	}
 }
 
-// module.exports.ingestHotelTemplate({ jobIngestionId: 18378 })
+module.exports.ingestHotelTemplate({ jobIngestionId: 27 })
