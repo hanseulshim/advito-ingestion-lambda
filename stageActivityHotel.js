@@ -19,7 +19,7 @@ const advito = require('knex')({
 
 module.exports.ingestHotelTemplate = async (event) => {
 	try {
-		const { jobIngestionId, data, start, end } = event
+		const { jobIngestionId, data, start, end, final } = event
 		if (!jobIngestionId) throw Error('Job ingestion not found')
 		const columnList = await advito('advito_application_template_column as tc')
 			.select('tc.column_name', 'tc.stage_column_name', 'i.file_name')
@@ -49,19 +49,22 @@ module.exports.ingestHotelTemplate = async (event) => {
 			})
 			return returnObj
 		})
-		console.log(
-			`Inserting rows [${start}:${end}] into db for job ingestion id: ${jobIngestionId}`
-		)
+		console.log(`Inserting rows [${start}:${end}] into db`)
 		const result = await advito('stage_activity_hotel').insert(insertArray)
-		await advito('job_ingestion').update({
-			is_complete: true,
-			job_status: 'ingested',
-			job_note: `Ingestion Date: ${new Date().toLocaleString()}`
-		})
-		console.log(`Expected to insert ${end - start} rows.`)
-		console.log(`Data length is: ${parsedData.length}.`)
-		console.log(`Insert length is: ${insertArray.length}.`)
-		console.log(`Inserted ${result.rowCount} rows into DB.`)
+		if (final) {
+			console.log(`Expected to insert ${end - start} rows.`)
+			console.log(`Data length is: ${parsedData.length}.`)
+			console.log(`Insert length is: ${insertArray.length}.`)
+			console.log(`Inserted ${result.rowCount} rows into DB.`)
+			console.log('Inserted into job: ', jobIngestionId)
+			await advito('job_ingestion')
+				.update({
+					is_complete: true,
+					job_status: 'ingested',
+					job_note: `Ingestion Date: ${new Date().toLocaleString()}`
+				})
+				.where('id', jobIngestionId)
+		}
 		return `Insert ${jobIngestionId} into successful`
 	} catch (e) {
 		console.log(e)
