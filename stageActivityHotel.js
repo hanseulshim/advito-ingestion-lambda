@@ -66,6 +66,8 @@ module.exports.ingestHotelTemplate = async (event) => {
 			return returnObj
 		})
 		console.log(`Inserting rows [${start}:${end}] into db`)
+		console.log('insert array: ', insertArray)
+		console.log('data: ', data)
 		const result = await advito('stage_activity_hotel').insert(insertArray)
 		if (final) {
 			console.log(`Expected to insert ${end - start} rows.`)
@@ -90,15 +92,15 @@ module.exports.ingestHotelTemplate = async (event) => {
 				job_status: 'error',
 				job_note: `Error with inserting rows: ${e.message}`
 			})
-			.where('id', jobIngestionId)
+			.where('id', event.jobIngestionId)
 	}
 }
 
-module.exports.ingestHotelTemplate({
-	jobIngestionId: 18758,
-	start: 0,
-	end: 15,
-	final: true,
-	data:
-		'[{"Client Name":"CloudVenture", "Room Spend": 123.456, "Global Customer Number":9002,"Locator":"ABCDEF","Traveler":"McTesterson\\/TestLong","Invoice Date":"2019-12-01T00:00:00.000Z","Invoice Number":"W123456789","Agency Name":"Demo - BCD Australia","Agency Code":"X8","Booking Source":"Agency","Local Hotel Reason Code Description":"Customer Preferred Hotel Booked","Global Hotel Reason Code Description":"Preferred Hotel Booked","Refund Indicator":"N","Exchange Indicator":"N","Original Document Number":null,"Int Dom":"Domestic","Traveler Country":"Australia","Ticketing Country":"Australia","Ticketing Region":"South Pacific","Check-In Date":"2019-12-03T00:00:00.000Z","Check-Out Date":"2019-12-05T00:00:00.000Z","Confirmation Number":"W123456789","Hotel Chain Code":"CY","Hotel Chain Name":"Marriott International Inc.","Hotel Brand Name":"Courtyard","Property Name":"Courtyard by Marriott West Palm Beach Airport","Property Address 1":"1800 Centrepark Drive East","Property Address 2":null,"Property City":"West Palm Beach","Property City Code":"PBI","Major City":"West Palm Beach","Property State":"FL","Postal Code":33401,"Property Country Code":"US","Property Country":"United States","Phone":15612071800,"Number Of Rooms":1,"Number Of Nights":2,"Room Type Code":"F1K","Room Type":"1 KING BED               ","Rate Category":"BAR","Room Rate":330.2565,"Total Amount ":660.513,"Hotel Preferred Indicator":"Y","Booking Date":"2019-04-01T00:00:00.000Z","Service Fees":null,"Highest Rate Available":907.497,"Lowest Rate Available":314.53,"Source Currency Code":"USD","Transaction Currency":"JPY","Currency Conversion Rate":0.0,"Amadeus ID":"PBICYC","Worldspan ID":"PBICY","Sabre ID":58685,"Apollo ID":36413,"HRS ID":null,"Lanyon ID":78758,"Internal Hotel Code":"PBICY","City Latitude":26.714439,"City Longitude":-80.054947,"Hotel Latitude":26.6948451996,"Hotel Longitude":-80.0698776245,"Client Field 1":"EAST","Client Field 2":null,"Client Field 3":"CORPORATE","Client Field 4":null,"Client Field 5":null,"Client Field 6":null,"Client Field 7":null,"Client Field 8":null,"Client Field 9":null,"Client Field 10":null}]'
-})
+// module.exports.ingestHotelTemplate({
+// 	jobIngestionId: 18758,
+// 	start: 0,
+// 	end: 15,
+// 	final: true,
+// 	data:
+// 		'[{"Client Name":"CloudVenture", "Room Spend": 123.456, "Global Customer Number":9002,"Locator":"ABCDEF","Traveler":"McTesterson\\/TestLong","Invoice Date":"2019-12-01T00:00:00.000Z","Invoice Number":"W123456789","Agency Name":"Demo - BCD Australia","Agency Code":"X8","Booking Source":"Agency","Local Hotel Reason Code Description":"Customer Preferred Hotel Booked","Global Hotel Reason Code Description":"Preferred Hotel Booked","Refund Indicator":"N","Exchange Indicator":"N","Original Document Number":null,"Int Dom":"Domestic","Traveler Country":"Australia","Ticketing Country":"Australia","Ticketing Region":"South Pacific","Check-In Date":"2019-12-03T00:00:00.000Z","Check-Out Date":"2019-12-05T00:00:00.000Z","Confirmation Number":"W123456789","Hotel Chain Code":"CY","Hotel Chain Name":"Marriott International Inc.","Hotel Brand Name":"Courtyard","Property Name":"Courtyard by Marriott West Palm Beach Airport","Property Address 1":"1800 Centrepark Drive East","Property Address 2":null,"Property City":"West Palm Beach","Property City Code":"PBI","Major City":"West Palm Beach","Property State":"FL","Postal Code":33401,"Property Country Code":"US","Property Country":"United States","Phone":15612071800,"Number Of Rooms":1,"Number Of Nights":2,"Room Type Code":"F1K","Room Type":"1 KING BED               ","Rate Category":"BAR","Room Rate":330.2565,"Total Amount ":660.513,"Hotel Preferred Indicator":"Y","Booking Date":"2019-04-01T00:00:00.000Z","Service Fees":null,"Highest Rate Available":907.497,"Lowest Rate Available":314.53,"Source Currency Code":"USD","Transaction Currency":"JPY","Currency Conversion Rate":0.0,"Amadeus ID":"PBICYC","Worldspan ID":"PBICY","Sabre ID":58685,"Apollo ID":36413,"HRS ID":null,"Lanyon ID":78758,"Internal Hotel Code":"PBICY","City Latitude":26.714439,"City Longitude":-80.054947,"Hotel Latitude":26.6948451996,"Hotel Longitude":-80.0698776245,"Client Field 1":"EAST","Client Field 2":null,"Client Field 3":"CORPORATE","Client Field 4":null,"Client Field 5":null,"Client Field 6":null,"Client Field 7":null,"Client Field 8":null,"Client Field 9":null,"Client Field 10":null}]'
+// })
