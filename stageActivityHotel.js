@@ -1,7 +1,6 @@
 'use strict'
 
 const yenv = require('yenv')
-
 const env = yenv('./env.yml', {
 	env: 'default'
 })
@@ -21,6 +20,18 @@ module.exports.ingestHotelTemplate = async (event) => {
 	try {
 		const { jobIngestionId, data, start, end, final } = event
 		if (!jobIngestionId) throw Error('Job ingestion not found')
+		const jobIngestion = await advito('job_ingestion')
+			.where('id', jobIngestionId)
+			.first()
+		if (!jobIngestionId) throw Error('Job ingestion not found')
+		const {
+			data_start_date: dataStartDate,
+			data_end_date: dataEndDate
+		} = jobIngestion
+		const date1 = new Date(dataStartDate)
+		const date2 = new Date(dataEndDate)
+		const midpoint = new Date((date1.getTime() + date2.getTime()) / 2)
+		console.log('midpoint date: ', midpoint.toLocaleDateString())
 		const columnList = await advito('advito_application_template_column as tc')
 			.select('tc.column_name', 'tc.stage_column_name', 'i.file_name')
 			.leftJoin(
@@ -35,9 +46,9 @@ module.exports.ingestHotelTemplate = async (event) => {
 			)
 			.where('i.id', jobIngestionId)
 		const { rows: currencyList } = await advito.raw(`
-		SELECT	currency_code_to, conversion_rate_reverse
+		SELECT	currency_code_to, conversion_rate_reverse, conversion_date
 			FROM		currency_conversion cc
-			WHERE		id IN (SELECT id FROM currency_conversion WHERE currency_code_to = cc.currency_code_to ORDER BY conversion_date DESC LIMIT 1)
+			WHERE		id IN (SELECT id FROM currency_conversion WHERE currency_code_to = cc.currency_code_to AND conversion_date <= '${midpoint.toLocaleDateString()}' ORDER BY conversion_date DESC LIMIT 1)
 			ORDER BY currency_code_to
 		`)
 		const parsedData = JSON.parse(data)
