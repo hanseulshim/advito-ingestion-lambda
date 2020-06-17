@@ -37,6 +37,9 @@ functions:
           - suffix: .xlsx
   ingest-hotel-template:
     handler: stageActivityHotel.ingestHotelTemplate
+  load-enhanced-qc:
+    timeout: 900
+    handler: loadEnhancedQc.loadEnhancedQc
 
 custom:
   stage: ${opt:stage, self:provider.stage}
