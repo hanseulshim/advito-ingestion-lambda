@@ -40,6 +40,9 @@ functions:
   load-enhanced-qc:
     timeout: 900
     handler: loadEnhancedQc.loadEnhancedQc
+  backout:
+    timeout: 900
+    handler: backout.backout
 
 custom:
   stage: ${opt:stage, self:provider.stage}
