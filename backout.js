@@ -27,12 +27,14 @@ module.exports.backout = async (event) => {
 			.select()
 			.where('id', jobIngestionId)
 			.first()
-		if (
-			!jobIngestion ||
+
+		if (!jobIngestion) {
+			throw new TypeError('Job Ingestion Hotel not found', '500')
+		} else if (
 			!jobIngestion.is_complete ||
 			!statuses.includes(jobIngestion.job_status)
 		) {
-			throw new Error('Job Ingestion Hotel not found', '500')
+			throw new Error('Job Ingestion does not have status of complete', '500')
 		} else if (!statuses.includes(jobIngestion.job_status)) {
 			throw new Error('Job Ingestion does not have status of complete', '500')
 		} else if (!statuses.includes(jobIngestion.job_status)) {
@@ -148,11 +150,19 @@ module.exports.backout = async (event) => {
 		)
 		return true
 	} catch (e) {
-		console.log(e.message)
+		if (e.name !== 'TypeError') {
+			const { jobIngestionId, jobStatus } = event
+			await advito('job_ingestion')
+				.update({
+					job_status: jobStatus
+				})
+				.where('id', jobIngestionId)
+		}
 		throw Error('Backout failed')
 	}
 }
 
 // module.exports.backout({
-// 	jobIngestionId: 18812
+// 	jobIngestionId: 18654,
+// 	jobStatus: 'test'
 // })
