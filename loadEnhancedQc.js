@@ -22,9 +22,22 @@ module.exports.loadEnhancedQc = async (event) => {
 		if (!jobIngestionHotel) {
 			throw Error('Job ingestion not found')
 		}
-		await advito.raw(
+		const { rows } = await advito.raw(
 			`select * from load_for_sourcing_dpm(${jobIngestionHotel.jobIngestionId}, ${jobIngestionHotel.clientId}, ${jobIngestionHotel.year}, ${jobIngestionHotel.month}, '${jobIngestionHotel.type}')`
 		)
+		if (rows.length > 0) {
+			const result = await advito.raw(
+				`select * from best_of_hotel_project_property(${rows[0].load_for_sourcing_dpm})`
+			)
+			if (result.rows.length > 0) {
+				console.log(
+					'result from best of logic: ',
+					result.rows[0].best_of_hotel_project_property
+				)
+			} else {
+				console.log('best of logic returned false')
+			}
+		}
 		return true
 	} catch (e) {
 		console.log(e.message)
@@ -35,12 +48,12 @@ module.exports.loadEnhancedQc = async (event) => {
 	}
 }
 
-// module.exports.loadEnhancedQc({
-// 	jobIngestionHotel: {
-// 		jobIngestionId: 18823,
-// 		clientId: 348,
-// 		year: 2020,
-// 		month: 'NULL',
-// 		type: 'sourcing'
-// 	}
-// })
+module.exports.loadEnhancedQc({
+	jobIngestionHotel: {
+		jobIngestionId: 18862,
+		clientId: 348,
+		year: 2019,
+		month: 'NULL',
+		type: 'sourcing'
+	}
+})
