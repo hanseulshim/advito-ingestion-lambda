@@ -16,28 +16,15 @@ const advito = require('knex')({
 	}
 })
 
-module.exports.loadEnhancedQc = async (event) => {
+module.exports.approveFile = async (event) => {
 	try {
-		const { jobIngestionId, clientId, year, month, type } = event
+		const { jobIngestionId, clientId, type } = event
 		if (!jobIngestionId) {
 			throw Error('Job ingestion not found')
 		}
-		const { rows } = await advito.raw(
-			`select * from load_for_sourcing_dpm(${jobIngestionId}, ${clientId}, ${year}, ${month}, '${type}')`
+		await advito.raw(
+			`select * from approve_for_sourcing_dpm(${jobIngestionId}, ${clientId}, '${type}')`
 		)
-		if (rows.length > 0) {
-			const result = await advito.raw(
-				`select * from best_of_hotel_project_property(${rows[0].load_for_sourcing_dpm})`
-			)
-			if (result.rows.length > 0) {
-				console.log(
-					'result from best of logic: ',
-					result.rows[0].best_of_hotel_project_property
-				)
-			} else {
-				console.log('best of logic returned false')
-			}
-		}
 		return true
 	} catch (e) {
 		console.log(e.message)
@@ -48,10 +35,8 @@ module.exports.loadEnhancedQc = async (event) => {
 	}
 }
 
-// module.exports.loadEnhancedQc({
+// module.exports.approveFile({
 // jobIngestionId: 18862,
 // clientId: 348,
-// year: 2019,
-// month: 'NULL',
 // type: 'sourcing'
 // })

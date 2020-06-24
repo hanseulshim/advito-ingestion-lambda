@@ -40,6 +40,9 @@ functions:
   load-enhanced-qc:
     timeout: 900
     handler: loadEnhancedQc.loadEnhancedQc
+  approve-file:
+    timeout: 900
+    handler: approveFile.approveFile
   backout:
     timeout: 900
     handler: backout.backout

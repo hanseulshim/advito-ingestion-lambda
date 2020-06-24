@@ -158,7 +158,7 @@ module.exports.backout = async (event) => {
 				})
 				.where('id', jobIngestionId)
 		}
-		throw Error('Backout failed')
+		throw e
 	}
 }
 
