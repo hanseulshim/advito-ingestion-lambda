@@ -54,10 +54,7 @@ module.exports.deleteErrorFiles = async () => {
 
 			console.log(`Deleting ${deleteArray.length} files.`)
 
-			s3.deleteObjects(params, (err, data) => {
-				if (err) console.log(err, err.stack)
-				else console.log('deleted files: ', data)
-			})
+			await s3.deleteObjects(params).promise()
 
 			console.log('Updating list: ', jobIngestionList.length)
 			const updateList = jobIngestionList.map((job) =>
@@ -75,4 +72,4 @@ module.exports.deleteErrorFiles = async () => {
 	}
 }
 
-// module.exports.deleteErrorFiles()
+module.exports.deleteErrorFiles()
