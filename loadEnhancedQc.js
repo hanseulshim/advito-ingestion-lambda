@@ -18,13 +18,16 @@ const advito = require('knex')({
 
 module.exports.loadEnhancedQc = async (event) => {
 	try {
-		const { jobIngestionId, clientId, year, month, type } = event
-		if (!jobIngestionId) {
+		const { jobIngestionIds, clientId, year, month, type } = event
+		if (!jobIngestionIds.length) {
 			throw Error('Job ingestion not found')
 		}
+		console.log('running for jobs: ', jobIngestionIds)
+		const startTime = new Date().getTime()
 		const { rows } = await advito.raw(
-			`select * from load_for_sourcing_dpm(${jobIngestionId}, ${clientId}, ${year}, ${month}, '${type}')`
+			`select load_for_sourcing_dpm(ARRAY[${jobIngestionIds}], ${clientId}, ${year}, ${month}, '${type}')`
 		)
+		console.log(`Load Run Time: ${new Date().getTime() - startTime}ms`)
 		if (rows.length > 0) {
 			const result = await advito.raw(
 				`select * from best_of_hotel_project_property(${rows[0].load_for_sourcing_dpm})`
@@ -43,15 +46,15 @@ module.exports.loadEnhancedQc = async (event) => {
 		console.log(e.message)
 		await advito('job_ingestion_hotel')
 			.update('ingestion_note', 'error')
-			.where('job_ingestion_id', event.jobIngestionId)
-		throw Error('Loading enhanced QC failed')
+			.whereIn('job_ingestion_id', event.jobIngestionIds)
+		throw e
 	}
 }
 
 // module.exports.loadEnhancedQc({
-// jobIngestionId: 18862,
-// clientId: 348,
-// year: 2019,
-// month: 'NULL',
-// type: 'sourcing'
+// 	jobIngestionIds: [18873],
+// 	clientId: 348,
+// 	year: 2019,
+// 	month: 'NULL',
+// 	type: 'sourcing'
 // })

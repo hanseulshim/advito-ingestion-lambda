@@ -19,13 +19,14 @@ const advito = require('knex')({
 module.exports.backout = async (event) => {
 	try {
 		const { jobIngestionId } = event
-		const startTime = new Date().getTime()
 		console.log('running for job: ', jobIngestionId)
 
 		const hotelProject = await advito('hotel_project_job_ingestion')
 			.select()
 			.where('job_ingestion_id', jobIngestionId)
 			.first()
+
+		console.log('hotelProject', hotelProject)
 
 		if (!hotelProject) {
 			return true
@@ -34,6 +35,8 @@ module.exports.backout = async (event) => {
 		const jobIngestionList = await advito('hotel_project_job_ingestion')
 			.select()
 			.where('hotel_project_id', hotelProject.hotel_project_id)
+
+		console.log('jobIngestionList: ', jobIngestionList)
 
 		if (jobIngestionList.length) {
 			const jobQueries = jobIngestionList.map((v) =>
@@ -51,18 +54,25 @@ module.exports.backout = async (event) => {
 			await Promise.all(jobQueries)
 		}
 
+		console.log('starting deletes')
+		const startTime = new Date().getTime()
+
 		await advito('hotel_project_property_day')
 			.delete()
 			.where('hotel_project_id', hotelProject.hotel_project_id)
+		console.log('hotel_project_property_day delete done')
 		await advito('hotel_project_property')
 			.delete()
 			.where('hotel_project_id', hotelProject.hotel_project_id)
+		console.log('hotel_project_property delete done')
 		await advito('hotel_project_job_ingestion')
 			.delete()
 			.where('hotel_project_id', hotelProject.hotel_project_id)
+		console.log('hotel_project_job_ingestion delete done')
 		await advito('hotel_project')
 			.delete()
 			.where('id', hotelProject.hotel_project_id)
+		console.log('hotel_project delete done')
 
 		console.log(
 			`Deleted everything. Run Time: ${new Date().getTime() - startTime}ms`
