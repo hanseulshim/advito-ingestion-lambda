@@ -16,6 +16,7 @@ provider:
     SECRET_ACCESS_KEY: ${self:custom.environment.SECRET_ACCESS_KEY}
     REGION: ${self:custom.environment.REGION}
     BUCKET: ${self:custom.environment.BUCKET}
+    ENVIRONMENT: ${self:custom.environment.ENVIRONMENT}
   vpc:
     securityGroupIds:
       - 'sg-09b7d9888c893594d'
@@ -36,6 +37,7 @@ functions:
         rules:
           - suffix: .xlsx
   ingest-hotel-template:
+    timeout: 900
     handler: stageActivityHotel.ingestHotelTemplate
   load-enhanced-qc:
     timeout: 900
@@ -46,6 +48,9 @@ functions:
   backout:
     timeout: 900
     handler: backout.backout
+  best-of-logic:
+    timeout: 900
+    handler: bestOfLogic.bestOfLogic
 
 custom:
   stage: ${opt:stage, self:provider.stage}

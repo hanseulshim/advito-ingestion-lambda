@@ -47,12 +47,30 @@ module.exports.backout = async (event) => {
 						date_status_dpm: null,
 						is_sourcing: false,
 						status_sourcing: null,
-						date_status_sourcing: null
+						date_status_sourcing: null,
+						ingestion_note: null
 					})
 					.where('job_ingestion_id', v.job_ingestion_id)
 			)
 			await Promise.all(jobQueries)
 		}
+
+		const stageActivityHotelList = await advito('stage_activity_hotel')
+			.where('job_ingestion_id', jobIngestionId)
+			.select('id')
+		const stageActivityHotelIds = stageActivityHotelList.map((v) => v.id)
+
+		await Promise.all([
+			advito('activity_hotel')
+				.delete()
+				.whereIn('stage_id', stageActivityHotelIds),
+			advito('stage_activity_hotel_candidate')
+				.delete()
+				.whereIn('stage_activity_hotel_id', stageActivityHotelIds)
+		])
+		await advito('stage_activity_hotel')
+			.where('job_ingestion_id', jobIngestionId)
+			.delete()
 
 		console.log('starting deletes')
 		const startTime = new Date().getTime()
@@ -72,6 +90,10 @@ module.exports.backout = async (event) => {
 		await advito('hotel_project')
 			.delete()
 			.where('id', hotelProject.hotel_project_id)
+
+		await advito('job_ingestion')
+			.update({ job_status: 'backout' })
+			.where('id', jobIngestionId)
 		console.log('hotel_project delete done')
 
 		console.log(

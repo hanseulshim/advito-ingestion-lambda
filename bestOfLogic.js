@@ -34,6 +34,7 @@ module.exports.bestOfLogic = async (event) => {
 		} else {
 			console.log('best of logic returned false')
 		}
+		await advito.destroy()
 		return true
 	} catch (e) {
 		console.log(e.message)
