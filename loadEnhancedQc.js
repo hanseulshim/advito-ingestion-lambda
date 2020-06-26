@@ -1,5 +1,5 @@
 'use strict'
-const aws = require('aws-sdk')
+
 const yenv = require('yenv')
 const env = yenv('./env.yml', {
 	env: 'default'
@@ -15,15 +15,6 @@ const advito = require('knex')({
 			: env.DB_PASSWORD
 	}
 })
-const lambda = new aws.Lambda({
-	accessKeyId: process.env.ACCESS_KEY_ID
-		? process.env.ACCESS_KEY_ID
-		: env.ACCESS_KEY_ID,
-	secretAccessKey: process.env.SECRET_ACCESS_KEY
-		? process.env.SECRET_ACCESS_KEY
-		: env.SECRET_ACCESS_KEY,
-	region: process.env.REGION ? process.env.REGION : env.REGION
-})
 
 module.exports.loadEnhancedQc = async (event) => {
 	try {
@@ -35,31 +26,80 @@ module.exports.loadEnhancedQc = async (event) => {
 		const startTime = new Date().getTime()
 		console.log(
 			'Calling stored procedure: ',
-			`select load_for_sourcing_dpm(ARRAY[${jobIngestionIds}], ${clientId}, ${year}, ${month}, '${type}')`
+			`SELECT load_for_sourcing_dpm(ARRAY[${jobIngestionIds}], ${clientId}, ${year}, ${month}, '${type}')`
 		)
 		const { rows } = await advito.raw(
-			`select load_for_sourcing_dpm(ARRAY[${jobIngestionIds}], ${clientId}, ${year}, ${month}, '${type}')`
+			`SELECT load_for_sourcing_dpm(ARRAY[${jobIngestionIds}], ${clientId}, ${year}, ${month}, '${type}')`
 		)
-		console.log(`Load Run Time: ${new Date().getTime() - startTime}ms`)
+		const startTime2 = new Date().getTime()
+		console.log(
+			`load_for_sourcing_dpm Run Time: ${(startTime2 - startTime) / 1000}s`
+		)
+		if (rows.length) {
+			const hotelProjectId = rows[0].load_for_sourcing_dpm
+			console.log('Hotel project id: ', hotelProjectId)
+			await new Promise((done) => setTimeout(() => done(), 3000))
+			console.log(
+				'Calling stored procedure: ',
+				`SELECT load_for_sourcing_dpm_calculate(${hotelProjectId})`
+			)
+			const startTime3 = new Date().getTime()
+			await advito.raw(
+				`SELECT load_for_sourcing_dpm_calculate(${hotelProjectId})`
+			)
+			console.log(
+				`load_for_sourcing_dpm_calculate Run Time: ${
+					(startTime3 - startTime2) / 1000
+				}s`
+			)
+			await new Promise((done) => setTimeout(() => done(), 3000))
+			console.log(
+				'Calling stored procedure: ',
+				`SELECT best_of_hotel_project_property(${hotelProjectId})`
+			)
+			const startTime4 = new Date().getTime()
+			await advito.raw(
+				`SELECT best_of_hotel_project_property(${hotelProjectId})`
+			)
+			console.log(
+				`best_of_hotel_project_property Run Time: ${
+					(startTime4 - startTime3) / 1000
+				}s`
+			)
 
-		console.log('Load result: ', rows)
+			console.log('Updating job ingestion hotel status')
 
-		await advito.destroy()
+			if (type === 'dpm') {
+				await advito('job_ingestion_hotel')
+					.update({
+						is_dpm: true,
+						status_dpm: 'Loaded',
+						date_status_dpm: new Date()
+					})
+					.whereIn('job_ingestion_id', jobIngestionIds)
+			} else {
+				await advito('job_ingestion_hotel')
+					.update({
+						is_sourcing: true,
+						status_sourcing: 'Loaded',
+						date_status_sourcing: new Date()
+					})
+					.whereIn('job_ingestion_id', jobIngestionIds)
+			}
 
-		const params = {
-			FunctionName:
-				process.env.ENVIRONMENT === 'PRODUCTION'
-					? 'advito-ingestion-production-best-of-logic'
-					: process.env.ENVIRONMENT === 'STAGING'
-					? 'advito-ingestion-staging-best-of-logic'
-					: 'advito-ingestion-dev-best-of-logic',
-			InvocationType: 'Event',
-			Payload: JSON.stringify({
-				hotelProjectId: rows[0].load_for_sourcing_dpm
-			})
+			console.log('Updating job ingestion status')
+
+			await advito('job_ingestion')
+				.update({
+					job_status: 'loaded'
+				})
+				.whereIn('id', jobIngestionIds)
+
+			console.log('done!')
+		} else {
+			console.log('Hotel project not found... something went wrong!')
+			throw new Error('Hotel project not found... something went wrong!')
 		}
-		await lambda.invoke(params).promise()
-
 		return true
 	} catch (e) {
 		console.log(e.message)
@@ -71,9 +111,9 @@ module.exports.loadEnhancedQc = async (event) => {
 }
 
 // module.exports.loadEnhancedQc({
-// 	jobIngestionIds: [18890],
-// 	clientId: 348,
-// 	year: 2019,
+// 	jobIngestionIds: [19009],
+// 	clientId: 257,
+// 	year: 2021,
 // 	month: 'NULL',
 // 	type: 'sourcing'
 // })

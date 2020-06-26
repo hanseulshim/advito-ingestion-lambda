@@ -28,19 +28,17 @@ module.exports.backout = async (event) => {
 
 		console.log('hotelProject', hotelProject)
 
-		if (!hotelProject) {
-			return true
-		}
+		if (hotelProject) {
+			console.log('Starting hotel project deletions')
+			const startTime = new Date().getTime()
+			const jobIngestionList = await advito('hotel_project_job_ingestion')
+				.select()
+				.where('hotel_project_id', hotelProject.hotel_project_id)
 
-		const jobIngestionList = await advito('hotel_project_job_ingestion')
-			.select()
-			.where('hotel_project_id', hotelProject.hotel_project_id)
+			console.log('JobIngestionList: ', jobIngestionList)
 
-		console.log('jobIngestionList: ', jobIngestionList)
-
-		if (jobIngestionList.length) {
-			const jobQueries = jobIngestionList.map((v) =>
-				advito('job_ingestion_hotel')
+			if (jobIngestionList.length) {
+				await advito('job_ingestion_hotel')
 					.update({
 						is_dpm: false,
 						status_dpm: null,
@@ -50,11 +48,53 @@ module.exports.backout = async (event) => {
 						date_status_sourcing: null,
 						ingestion_note: null
 					})
-					.where('job_ingestion_id', v.job_ingestion_id)
+					.whereIn(
+						'job_ingestion_id',
+						jobIngestionList.map((v) => v.id)
+					)
+				console.log('Finish job ingestion hotel status updates')
+			}
+			await advito('hotel_project_property_day')
+				.delete()
+				.where('hotel_project_id', hotelProject.hotel_project_id)
+			console.log('hotel_project_property_day delete done')
+			await advito('hotel_project_property')
+				.delete()
+				.where('hotel_project_id', hotelProject.hotel_project_id)
+			console.log('hotel_project_property delete done')
+			await advito('hotel_project_job_ingestion')
+				.delete()
+				.where('hotel_project_id', hotelProject.hotel_project_id)
+			console.log('hotel_project_job_ingestion delete done')
+			await advito('hotel_project')
+				.delete()
+				.where('id', hotelProject.hotel_project_id)
+			console.log('hotel_project delete done')
+			console.log(
+				`Deleted hotel project stuff. Run Time: ${
+					new Date().getTime() - startTime
+				}ms`
 			)
-			await Promise.all(jobQueries)
+		} else {
+			console.log(
+				'No hotel project. Just updating single job_ingestion_hotel status'
+			)
+			await advito('job_ingestion_hotel')
+				.update({
+					is_dpm: false,
+					status_dpm: null,
+					date_status_dpm: null,
+					is_sourcing: false,
+					status_sourcing: null,
+					date_status_sourcing: null,
+					ingestion_note: null
+				})
+				.where('job_ingestion_id', jobIngestionId)
+			console.log('Finish job ingestion hotel status updates')
 		}
 
+		console.log('Starting other deletes')
+		const startTime2 = new Date().getTime()
 		const stageActivityHotelList = await advito('stage_activity_hotel')
 			.where('job_ingestion_id', jobIngestionId)
 			.select('id')
@@ -68,36 +108,18 @@ module.exports.backout = async (event) => {
 				.delete()
 				.whereIn('stage_activity_hotel_id', stageActivityHotelIds)
 		])
+		console.log('Deleted activity_hotel and stage_activity_hotel_candidate')
 		await advito('stage_activity_hotel')
 			.where('job_ingestion_id', jobIngestionId)
 			.delete()
-
-		console.log('starting deletes')
-		const startTime = new Date().getTime()
-
-		await advito('hotel_project_property_day')
-			.delete()
-			.where('hotel_project_id', hotelProject.hotel_project_id)
-		console.log('hotel_project_property_day delete done')
-		await advito('hotel_project_property')
-			.delete()
-			.where('hotel_project_id', hotelProject.hotel_project_id)
-		console.log('hotel_project_property delete done')
-		await advito('hotel_project_job_ingestion')
-			.delete()
-			.where('hotel_project_id', hotelProject.hotel_project_id)
-		console.log('hotel_project_job_ingestion delete done')
-		await advito('hotel_project')
-			.delete()
-			.where('id', hotelProject.hotel_project_id)
+		console.log('Deleted stage_activity_hotel')
 
 		await advito('job_ingestion')
 			.update({ job_status: 'backout' })
 			.where('id', jobIngestionId)
-		console.log('hotel_project delete done')
 
 		console.log(
-			`Deleted everything. Run Time: ${new Date().getTime() - startTime}ms`
+			`Backout done. Run Time: ${new Date().getTime() - startTime2}ms`
 		)
 
 		return true
@@ -107,5 +129,5 @@ module.exports.backout = async (event) => {
 }
 
 // module.exports.backout({
-// 	jobIngestionId: 18873
+// 	jobIngestionId: 18986
 // })

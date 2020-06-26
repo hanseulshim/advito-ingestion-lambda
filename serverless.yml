@@ -48,9 +48,6 @@ functions:
   backout:
     timeout: 900
     handler: backout.backout
-  best-of-logic:
-    timeout: 900
-    handler: bestOfLogic.bestOfLogic
 
 custom:
   stage: ${opt:stage, self:provider.stage}
