@@ -50,7 +50,7 @@ module.exports.backout = async (event) => {
 					})
 					.whereIn(
 						'job_ingestion_id',
-						jobIngestionList.map((v) => v.id)
+						jobIngestionList.map((v) => v.job_ingestion_id)
 					)
 				console.log('Finish job ingestion hotel status updates')
 			}
