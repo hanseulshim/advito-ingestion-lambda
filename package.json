@@ -15,6 +15,7 @@
 	"dependencies": {
 		"aws-sdk": "^2.659.0",
 		"csv-parser": "^2.3.2",
+		"json2csv": "^5.0.1",
 		"knex": "^0.21.0",
 		"pg": "^8.0.2",
 		"xlsx": "^0.15.6",

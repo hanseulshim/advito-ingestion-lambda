@@ -48,6 +48,12 @@ functions:
   backout:
     timeout: 900
     handler: backout.backout
+  export-enhanced-qc:
+    timeout: 900
+    handler: exportEnhancedQc.exportEnhancedQc
+  export-activity-data-qc:
+    timeout: 900
+    handler: exportActivityDataQc.exportActivityDataQc
 
 custom:
   stage: ${opt:stage, self:provider.stage}
