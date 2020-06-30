@@ -98,8 +98,10 @@ module.exports.loadEnhancedQc = async (event) => {
 			console.log('done!')
 		} else {
 			console.log('Hotel project not found... something went wrong!')
+			await advito.destroy()
 			throw new Error('Hotel project not found... something went wrong!')
 		}
+		await advito.destroy()
 		return true
 	} catch (e) {
 		console.log(e.message)

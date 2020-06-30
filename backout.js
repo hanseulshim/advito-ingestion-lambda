@@ -121,7 +121,7 @@ module.exports.backout = async (event) => {
 		console.log(
 			`Backout done. Run Time: ${new Date().getTime() - startTime2}ms`
 		)
-
+		await advito.destroy()
 		return true
 	} catch (e) {
 		throw e

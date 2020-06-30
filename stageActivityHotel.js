@@ -97,6 +97,7 @@ module.exports.ingestHotelTemplate = async (event) => {
 				})
 				.where('id', jobIngestionId)
 		}
+		await advito.destroy()
 		return `Insert ${jobIngestionId} into successful`
 	} catch (e) {
 		console.log(e)

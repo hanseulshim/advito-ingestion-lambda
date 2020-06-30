@@ -25,6 +25,7 @@ module.exports.approveFile = async (event) => {
 		await advito.raw(
 			`select * from approve_for_sourcing_dpm(${jobIngestionId}, ${clientId}, '${type}')`
 		)
+		await advito.destroy()
 		return true
 	} catch (e) {
 		console.log(e.message)
