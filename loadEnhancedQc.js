@@ -16,7 +16,8 @@ const advito = require('knex')({
 	}
 })
 
-module.exports.loadEnhancedQc = async (event) => {
+module.exports.loadEnhancedQc = async (event, context) => {
+	context.callbackWaitsForEmptyEventLoop = false
 	try {
 		const { jobIngestionIds, clientId, year, month, type } = event
 		if (!jobIngestionIds.length) {

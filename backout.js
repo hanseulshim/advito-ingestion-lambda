@@ -16,7 +16,8 @@ const advito = require('knex')({
 	}
 })
 
-module.exports.backout = async (event) => {
+module.exports.backout = async (event, context) => {
+	context.callbackWaitsForEmptyEventLoop = false
 	try {
 		const { jobIngestionId } = event
 		console.log('running for job: ', jobIngestionId)

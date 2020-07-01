@@ -16,7 +16,8 @@ const advito = require('knex')({
 	}
 })
 
-module.exports.approveFile = async (event) => {
+module.exports.approveFile = async (event, context) => {
+	context.callbackWaitsForEmptyEventLoop = false
 	try {
 		const { jobIngestionId, clientId, type } = event
 		if (!jobIngestionId) {

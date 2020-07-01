@@ -16,7 +16,8 @@ const advito = require('knex')({
 	}
 })
 
-module.exports.ingestHotelTemplate = async (event) => {
+module.exports.ingestHotelTemplate = async (event, context) => {
+	context.callbackWaitsForEmptyEventLoop = false
 	try {
 		const { jobIngestionId, data, start, end, final } = event
 		if (!jobIngestionId) throw Error('Job ingestion not found')

@@ -16,7 +16,8 @@ const advito = require('knex')({
 	}
 })
 
-module.exports.bestOfLogic = async (event) => {
+module.exports.bestOfLogic = async (event, context) => {
+	context.callbackWaitsForEmptyEventLoop = false
 	try {
 		const { hotelProjectId } = event
 		if (!hotelProjectId) {

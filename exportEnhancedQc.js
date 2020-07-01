@@ -16,7 +16,8 @@ const advito = require('knex')({
 	}
 })
 
-module.exports.exportEnhancedQc = async (event) => {
+module.exports.exportEnhancedQc = async (event, context) => {
+	context.callbackWaitsForEmptyEventLoop = false
 	try {
 		const { clientId, dataStartDate, dataEndDate, currencyType } = event
 
