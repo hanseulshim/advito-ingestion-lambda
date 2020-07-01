@@ -46,7 +46,7 @@ module.exports.exportEnhancedQc = async (event) => {
 			data_end_date: dataEndDate
 		})
 		console.log('done')
-		await advito.destroy()
+
 		return true
 	} catch (e) {
 		throw e

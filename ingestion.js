@@ -69,7 +69,6 @@ module.exports.deleteErrorFiles = async () => {
 				)
 				await Promise.all(updateList)
 			}
-			await advito.destroy()
 		} catch (e) {
 			console.log(`Error: ${e.message}`)
 		}
