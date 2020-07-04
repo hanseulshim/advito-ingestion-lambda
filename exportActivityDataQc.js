@@ -2,7 +2,7 @@
 const { parse } = require('json2csv')
 const yenv = require('yenv')
 const env = yenv('./env.yml', {
-	env: 'default'
+	env: 'production'
 })
 const advito = require('knex')({
 	client: 'pg',
@@ -19,32 +19,30 @@ const advito = require('knex')({
 module.exports.exportActivityDataQc = async (event, context) => {
 	context.callbackWaitsForEmptyEventLoop = false
 	try {
-		const { clientId, dataStartDate, dataEndDate, currencyType } = event
-
+		const { jobIngestionIds, currencyType } = event
+		if (!jobIngestionIds.length) {
+			throw Error('Job ingestion not found')
+		}
 		console.log('Starting export_stage_activity_hotel_qc')
 		const startTime = new Date().getTime()
 		const { rows } = await advito.raw(
-			`select * from export_stage_activity_hotel_qc(${clientId}, '${dataStartDate}'::date, '${dataEndDate}'::date, '${currencyType}')`
+			`select * from export_stage_activity_hotel_qc(ARRAY[${jobIngestionIds}], '${currencyType}')`
 		)
 		console.log(
 			`Finish export_stage_activity_hotel_qc - run time: ${
 				(new Date().getTime() - startTime) / 1000
 			}s`
 		)
+
 		console.log('deleting export_qc')
 		await advito('export_qc')
 			.delete()
-			.where('client_id', clientId)
-			.andWhere('export_type', 'activity')
-			.andWhere('data_start_date', dataStartDate)
-			.andWhere('data_end_date', dataEndDate)
+			.where('job_ingestion_ids', jobIngestionIds.sort().join(', '))
 		console.log('inserting export_qc')
 		await advito('export_qc').insert({
-			client_id: clientId,
 			export_type: 'activity',
 			export_data: rows.length ? parse(rows) : '',
-			data_start_date: dataStartDate,
-			data_end_date: dataEndDate
+			job_ingestion_ids: jobIngestionIds.sort().join(', ')
 		})
 		console.log('done')
 
@@ -54,9 +52,10 @@ module.exports.exportActivityDataQc = async (event, context) => {
 	}
 }
 
-// module.exports.exportActivityDataQc({
-// 	clientId: 226,
-// 	dataStartDate: '01-01-2019',
-// 	dataEndDate: '12-31-2020',
-// 	currencyType: 'USD'
-// })
+// module.exports.exportActivityDataQc(
+// 	{
+// 		jobIngestionIds: [727, 597],
+// 		currencyType: 'USD'
+// 	},
+// 	{}
+// )
