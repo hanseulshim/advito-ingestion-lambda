@@ -75,6 +75,11 @@ module.exports.ingestHotelTemplate = async (event, context) => {
 							? String(+json[key] * +currency.conversion_rate)
 							: String(+json[key])
 					}
+					if (column.stage_column_name === 'traveler_last_name') {
+						const travelerLastName = json['traveler last name']
+						const travelerFirstName = json['traveler first name']
+						returnObj['traveler'] = `${travelerLastName}/${travelerFirstName}`
+					}
 					returnObj[column.stage_column_name] = String(json[key]).trim()
 				}
 			})
