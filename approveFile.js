@@ -35,20 +35,30 @@ module.exports.approveFile = async (event, context) => {
 		if (!jobIngestionIds.length) {
 			throw Error('Job ingestion not found')
 		}
+		console.log(
+			`SELECT * FROM approve_for_sourcing_dpm(ARRAY[${jobIngestionIds}], ${clientId}, '${type}')`
+		)
 		const { rows } = await advito.raw(
 			`SELECT * FROM approve_for_sourcing_dpm(ARRAY[${jobIngestionIds}], ${clientId}, '${type}')`
 		)
-		console.log(rows)
+		console.log('return from approve_for_sourcing_dpm: ', rows)
 		if (rows.length) {
 			const hotelProject = rows[0]
 			if (type === 'dpm') {
+				console.log(`SELECT process_hpd(${hotelProject.id}, ${userId})`)
 				await hotel.raw(`SELECT process_hpd(${hotelProject.id}, ${userId})`)
 			} else {
+				console.log(
+					`SELECT process_spend_analysis(${hotelProject.id}, ${userId})`
+				)
 				await hotel.raw(
 					`SELECT process_spend_analysis(${hotelProject.id}, ${userId})`
 				)
+				console.log(`SELECT approve_hpm(${hotelProject.id})`)
 				await hotel.raw(`SELECT approve_hpm(${hotelProject.id})`)
+				console.log(`SELECT update_bar_rates(${hotelProject.project_year})`)
 				await hotel.raw(`SELECT update_bar_rates(${hotelProject.project_year})`)
+				console.log(`SELECT update_bcd_rates(${hotelProject.project_year})`)
 				await hotel.raw(`SELECT update_bcd_rates(${hotelProject.project_year})`)
 			}
 		} else {
@@ -70,8 +80,8 @@ module.exports.approveFile = async (event, context) => {
 
 // module.exports.approveFile(
 // 	{
-// 		jobIngestionIds: [744, 777],
-// 		clientId: 347,
+// 		jobIngestionIds: [801],
+// 		clientId: 348,
 // 		type: 'sourcing',
 // 		userId: 882
 // 	},
