@@ -23,7 +23,10 @@ module.exports.exportActivityDataQc = async (event, context) => {
 		if (!jobIngestionIds.length) {
 			throw Error('Job ingestion not found')
 		}
-		console.log('Starting export_stage_activity_hotel_qc')
+		console.log(
+			'Starting export_stage_activity_hotel_qc: ',
+			`select * from export_stage_activity_hotel_qc(ARRAY[${jobIngestionIds}], '${currencyType}')`
+		)
 		const startTime = new Date().getTime()
 		const { rows } = await advito.raw(
 			`select * from export_stage_activity_hotel_qc(ARRAY[${jobIngestionIds}], '${currencyType}')`
@@ -54,7 +57,7 @@ module.exports.exportActivityDataQc = async (event, context) => {
 
 // module.exports.exportActivityDataQc(
 // 	{
-// 		jobIngestionIds: [727, 597],
+// 		jobIngestionIds: [935, 937, 938, 933],
 // 		currencyType: 'USD'
 // 	},
 // 	{}
