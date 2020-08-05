@@ -93,4 +93,4 @@ module.exports.deleteErrorFiles = async () => {
   }
 }
 
-module.exports.deleteErrorFiles()
+// module.exports.deleteErrorFiles()
